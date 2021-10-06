@@ -12,6 +12,7 @@
 #include <mutex>
 #include <semaphore>
 #include <chrono>
+#include <thread>
 //#include <iostream>
 //#include <iostream>
 
@@ -27,12 +28,18 @@ int status[N];
 #define HUNGRY 0
 
 //int status[N];
-mutex mtx;
-counting_semaphore<2> sem[N];
-
+mutex mtx, mtx1, mtx2;
+counting_semaphore<5> sem(1);
+  
 
 class PHILOSOPHER {
+    
 public:
+    int numOfPhil = 0;
+    PHILOSOPHER (const int& numOfPhilo) {
+       // process();
+        numOfPhil = numOfPhilo;
+    };
     void process() {
         while(1) {
             Thinking();
@@ -41,33 +48,86 @@ public:
             PutFork();
         }
     };
-    void Eating();
-    void Thinking();
-    void CheckForkIsFree(){
-        if (status[numOfPhilosopher] == HUNGRY && status[LEFTFORK] != EATING && status[RIGHTFORK] != EATING) {
-            status[numOfPhilosopher] = EATING;
-            sem[numOfPhilosopher].max();
+    void Eating() {
+        mtx1.lock();
+        cout << "Philosopher N " << numOfPhil << " " << "is eating"<< endl;
+        mtx1.unlock();
+    };
+    void Thinking() {
+        mtx1.lock();
+        cout << "Philosopher N " << numOfPhil << " " << "is thinking"<< endl;
+        mtx1.unlock();
+    };
+    void CheckForkIsFree(int numOfPhil){
+        if (status[numOfPhil] == HUNGRY && status[LEFTFORK] != EATING && status[RIGHTFORK] != EATING) {
+            status[numOfPhil] = EATING;
+        sem.release();
         }
            
     };
     void TakeFork() {
         mtx.lock();
-        status[numOfPhilosopher] = HUNGRY;
-        //test(I)
+        status[numOfPhil] = HUNGRY;
+        CheckForkIsFree(numOfPhil);
         mtx.unlock();
-        sem[numOfPhilosopher].max();
+        sem.acquire()   ;
     };
     void PutFork() {
         mtx.lock();
-        status[numOfPhilosopher] = THINKING;
-        //test(left) ;test(right)
+        status[numOfPhil] = THINKING;
+        CheckForkIsFree(LEFTFORK) ;
+        CheckForkIsFree(RIGHTFORK);
         mtx.unlock();
     };
 };
 using namespace std;
 int main() {
-    PHILOSOPHER philosopher;
-    PHILOSOPHER arrOfPhilosophers[N];
+    thread::id id;
+    
+    vector <PHILOSOPHER> vecOfPhilosophers = {};
+    for (int i =0;i<5;i++){
+        numOfPhilosopher = i;
+        vecOfPhilosophers.push_back(PHILOSOPHER(numOfPhilosopher));
+    }
+    for (int i =0;i<5;i++){
+       // numOfPhilosopher = i;
+        cout << vecOfPhilosophers[i].numOfPhil<< endl;
+       // vecOfPhilosophers[i].process();
+    }
+  //  while(true) {
+        thread thread_array[5];
+    thread_array[0] = thread([&](){
+        vecOfPhilosophers[0].process();
+    });
+    thread_array[1] = thread([&](){
+        vecOfPhilosophers[1].process();
+    });
+    thread_array[2] = thread([&](){
+        vecOfPhilosophers[2].process();
+    });
+    thread_array[3] = thread([&](){
+        vecOfPhilosophers[3].process();
+    });
+    thread_array[4] = thread([&](){
+        vecOfPhilosophers[4].process();
+    });
+//    thread_array[5] = thread([&](){
+//        vecOfPhilosophers[5].process();
+//    });
+//        thread_array[1] = thread(vecOfPhilosophers[1].process());
+//        thread_array[2] = thread(vecOfPhilosophers[2].process());
+//        thread_array[3] = thread(vecOfPhilosophers[3].process());
+//        thread_array[4] = thread(vecOfPhilosophers[4].process());
+        for (int i = 0; i < 5; i++) {
+//               if (thread_array[i].joinable()) {
+//                   id = thread_array[i].get_id();
+//                   if (find(vecOfThreadid.cbegin(), vecOfThreadid.cend(), id)==vecOfThreadid.cend()) {
+//                       vecOfThreadid.push_back(id);
+//                   }
+                   thread_array[i].join();
+//               }
+        }
+  //  }
 //    int status[N];
 //    mutex mut;
 //    binary_semaphore sem[N];
