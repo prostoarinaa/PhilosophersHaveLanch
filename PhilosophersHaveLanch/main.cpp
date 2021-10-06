@@ -16,19 +16,19 @@
 //#include <iostream>
 
 using namespace std;
-
-int numOfPhilosopher = 0;
-
 #define N 5
+int numOfPhilosopher = 0;
+int status[N];
+
 #define LEFTFORK (numOfPhilosopher-1)%N
 #define RIGHTFORK (numOfPhilosopher+1)%N
 #define THINKING 1
 #define EATING 1
 #define HUNGRY 0
 
-int status[N];
+//int status[N];
 mutex mtx;
-binary_semaphore sem[N];
+counting_semaphore<2> sem[N];
 
 
 class PHILOSOPHER {
