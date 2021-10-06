@@ -14,17 +14,62 @@
 #include <chrono>
 //#include <iostream>
 //#include <iostream>
+
+using namespace std;
+
+int numOfPhilosopher = 0;
+
+#define N 5
+#define LEFTFORK (numOfPhilosopher-1)%N
+#define RIGHTFORK (numOfPhilosopher+1)%N
+#define THINKING 1
+#define EATING 1
+#define HUNGRY 0
+
+int status[N];
+mutex mtx;
+binary_semaphore sem[N];
+
+
 class PHILOSOPHER {
+public:
+    void process() {
+        while(1) {
+            Thinking();
+            TakeFork();
+            Eating();
+            PutFork();
+        }
+    };
     void Eating();
     void Thinking();
-    void CheckForkIsFree();
-    void TakeFork();
-    void PutFork();
+    void CheckForkIsFree(){
+        if (status[numOfPhilosopher] == HUNGRY && status[LEFTFORK] != EATING && status[RIGHTFORK] != EATING) {
+            status[numOfPhilosopher] = EATING;
+            sem[numOfPhilosopher].max();
+        }
+           
+    };
+    void TakeFork() {
+        mtx.lock();
+        status[numOfPhilosopher] = HUNGRY;
+        //test(I)
+        mtx.unlock();
+        sem[numOfPhilosopher].max();
+    };
+    void PutFork() {
+        mtx.lock();
+        status[numOfPhilosopher] = THINKING;
+        //test(left) ;test(right)
+        mtx.unlock();
+    };
 };
 using namespace std;
 int main() {
-   
-    
-    
+    PHILOSOPHER philosopher;
+    PHILOSOPHER arrOfPhilosophers[N];
+//    int status[N];
+//    mutex mut;
+//    binary_semaphore sem[N];
     return 0;
 }
