@@ -13,24 +13,19 @@
 #include <semaphore>
 #include <chrono>
 #include <thread>
-//#include <iostream>
-//#include <iostream>
 
 using namespace std;
+//vector<int> Prioritet = {5,5,5,5,5,5};
+
 #define N 5
 int numOfPhilosopher = 0;
 int status[N];
 
-#define LEFTFORK (numOfPhilosopher-1)%N
-#define RIGHTFORK (numOfPhilosopher+1)%N
-#define THINKING 1
-#define EATING 1
-#define HUNGRY 0
 
 //int status[N];
 mutex mtx, mtx1, mtx2;
-counting_semaphore<5> sem(1);
-  
+ counting_semaphore sem;
+//vector<counting_semaphore<5>> vecOfSem[5];
 
 class PHILOSOPHER {
     
@@ -42,12 +37,18 @@ public:
     };
     void process() {
         while(1) {
+            
             Thinking();
+            mtx2.lock();
             TakeFork();
             Eating();
             PutFork();
+           // Prioritet[numOfPhil]--;
+            this_thread::sleep_for(chrono::milliseconds(10));
+            mtx2.unlock();
         }
     };
+
     void Eating() {
         mtx1.lock();
         cout << "Philosopher N " << numOfPhil << " " << "is eating"<< endl;
@@ -59,28 +60,31 @@ public:
         mtx1.unlock();
     };
     void CheckForkIsFree(int numOfPhil){
-        if (status[numOfPhil] == HUNGRY && status[LEFTFORK] != EATING && status[RIGHTFORK] != EATING) {
-            status[numOfPhil] = EATING;
-        sem.release();
+        if (status[numOfPhil] == 0 && status[(numOfPhil-1)%N] != 1 && status[(numOfPhil+1)%N] != 1) {
+            status[numOfPhil] = 1;
+            
+       // mtx2.lock();
+            sem.release();
         }
            
     };
     void TakeFork() {
         mtx.lock();
-        status[numOfPhil] = HUNGRY;
+        status[numOfPhil] = 0;
         CheckForkIsFree(numOfPhil);
         mtx.unlock();
-        sem.acquire()   ;
+       // mtx2.unlock()   ;
     };
     void PutFork() {
         mtx.lock();
-        status[numOfPhil] = THINKING;
-        CheckForkIsFree(LEFTFORK) ;
-        CheckForkIsFree(RIGHTFORK);
+        status[numOfPhil] = 0;
+        CheckForkIsFree((numOfPhil-1)%N) ;
+        CheckForkIsFree((numOfPhil+1)%N);
         mtx.unlock();
+        sem.acquire();
     };
 };
-using namespace std;
+
 int main() {
     thread::id id;
     
@@ -94,7 +98,6 @@ int main() {
         cout << vecOfPhilosophers[i].numOfPhil<< endl;
        // vecOfPhilosophers[i].process();
     }
-  //  while(true) {
         thread thread_array[5];
     thread_array[0] = thread([&](){
         vecOfPhilosophers[0].process();
@@ -111,25 +114,10 @@ int main() {
     thread_array[4] = thread([&](){
         vecOfPhilosophers[4].process();
     });
-//    thread_array[5] = thread([&](){
-//        vecOfPhilosophers[5].process();
-//    });
-//        thread_array[1] = thread(vecOfPhilosophers[1].process());
-//        thread_array[2] = thread(vecOfPhilosophers[2].process());
-//        thread_array[3] = thread(vecOfPhilosophers[3].process());
-//        thread_array[4] = thread(vecOfPhilosophers[4].process());
+
         for (int i = 0; i < 5; i++) {
-//               if (thread_array[i].joinable()) {
-//                   id = thread_array[i].get_id();
-//                   if (find(vecOfThreadid.cbegin(), vecOfThreadid.cend(), id)==vecOfThreadid.cend()) {
-//                       vecOfThreadid.push_back(id);
-//                   }
                    thread_array[i].join();
-//               }
         }
-  //  }
-//    int status[N];
-//    mutex mut;
-//    binary_semaphore sem[N];
+
     return 0;
 }
